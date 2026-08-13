@@ -1,0 +1,725 @@
+<title>Backend remoto de Terraform — Arquitectura multi-cuenta</title>
+<style>
+  :root {
+    --ground: #F6F7F9;
+    --surface: #FFFFFF;
+    --surface-2: #EDF0F4;
+    --ink: #131C26;
+    --ink-soft: #3D4C5B;
+    --muted: #5A6B7C;
+    --line: #DCE2E9;
+    --line-soft: #E7EBF0;
+    --lock: #A9700E;
+    --lock-bg: #FBF3E4;
+    --dev: #0F6E68;
+    --prod: #A44A3E;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0E1620;
+      --surface: #16202C;
+      --surface-2: #1D2937;
+      --ink: #DDE5EC;
+      --ink-soft: #B4C1CD;
+      --muted: #8B9BAA;
+      --line: #283644;
+      --line-soft: #202C39;
+      --lock: #E3A94D;
+      --lock-bg: #2A2114;
+      --dev: #4FB8B0;
+      --prod: #DE9084;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0E1620;
+    --surface: #16202C;
+    --surface-2: #1D2937;
+    --ink: #DDE5EC;
+    --ink-soft: #B4C1CD;
+    --muted: #8B9BAA;
+    --line: #283644;
+    --line-soft: #202C39;
+    --lock: #E3A94D;
+    --lock-bg: #2A2114;
+    --dev: #4FB8B0;
+    --prod: #DE9084;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0 24px 96px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  .prose { max-width: 74ch; }
+
+  /* ---------- masthead ---------- */
+  header.masthead {
+    padding: 64px 0 40px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 44px;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 18px;
+  }
+  h1 {
+    font-size: clamp(30px, 4.6vw, 46px);
+    line-height: 1.1;
+    letter-spacing: -0.021em;
+    font-weight: 700;
+    margin: 0 0 16px;
+    text-wrap: balance;
+    max-width: 20ch;
+  }
+  .standfirst {
+    font-size: 18px;
+    color: var(--ink-soft);
+    margin: 0;
+    max-width: 62ch;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 28px;
+    margin-top: 28px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- sections ---------- */
+  section { margin: 0 0 60px; }
+  h2 {
+    font-size: 23px;
+    letter-spacing: -0.014em;
+    font-weight: 700;
+    margin: 0 0 8px;
+    text-wrap: balance;
+  }
+  h3 {
+    font-size: 16.5px;
+    font-weight: 650;
+    margin: 30px 0 6px;
+    letter-spacing: -0.006em;
+  }
+  p { margin: 0 0 16px; }
+  .lede { color: var(--ink-soft); margin-bottom: 26px; }
+  code {
+    font-family: var(--mono);
+    font-size: 0.865em;
+    background: var(--surface-2);
+    padding: 0.12em 0.4em;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+  strong { font-weight: 650; }
+
+  /* ---------- diagram sheet ---------- */
+  figure.sheet {
+    margin: 0 0 22px;
+    background: #FFFFFF;
+    border: 1px solid #C9D2DB;
+    border-radius: 10px;
+    padding: 22px;
+    overflow-x: auto;
+    box-shadow: 0 1px 2px rgba(19, 28, 38, .06), 0 8px 24px rgba(19, 28, 38, .05);
+  }
+  figure.sheet svg { display: block; width: 100%; min-width: 940px; height: auto; }
+  figcaption {
+    font-size: 13.5px;
+    color: var(--muted);
+    margin-top: 20px;
+    max-width: 78ch;
+    line-height: 1.55;
+  }
+  .sheet-note {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin: 0 0 34px;
+  }
+
+  /* ---------- step list ---------- */
+  ol.steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+  ol.steps li {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 16px;
+    align-items: start;
+    padding: 15px 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+  }
+  .badge {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--mono); font-size: 12.5px; font-weight: 700;
+    background: var(--surface-2); color: var(--ink-soft);
+    margin-top: 1px;
+  }
+  li.is-lock { background: var(--lock-bg); border-color: color-mix(in srgb, var(--lock) 34%, transparent); }
+  li.is-lock .badge { background: var(--lock); color: #FFFFFF; }
+  :root[data-theme="dark"] li.is-lock .badge { color: #16202C; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) li.is-lock .badge { color: #16202C; }
+  }
+  .step-t { font-weight: 650; display: block; margin-bottom: 2px; }
+  .step-d { color: var(--ink-soft); font-size: 14.5px; }
+  .step-d code { font-size: 0.9em; }
+
+  /* ---------- callout ---------- */
+  .callout {
+    border-left: 3px solid var(--lock);
+    background: var(--surface);
+    padding: 18px 22px;
+    border-radius: 0 7px 7px 0;
+    margin: 26px 0;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout .k {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--lock); display: block; margin-bottom: 7px;
+  }
+
+  /* ---------- glossary ---------- */
+  dl.gloss { margin: 0; display: grid; gap: 2px; }
+  dl.gloss > div {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 18px 20px;
+  }
+  dl.gloss dt {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  dl.gloss dd { margin: 0; color: var(--ink-soft); font-size: 15px; }
+  dl.gloss dd p { margin: 0 0 10px; }
+  dl.gloss dd p:last-child { margin: 0; }
+
+  /* ---------- scale table ---------- */
+  .tablewrap { overflow-x: auto; margin: 0 0 20px; }
+  table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 14.5px; }
+  caption {
+    text-align: left; color: var(--muted); font-size: 13px;
+    padding-bottom: 10px; font-family: var(--mono);
+  }
+  th, td { text-align: left; padding: 13px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--muted); font-weight: 600;
+    border-bottom: 1.5px solid var(--ink);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.lvl { font-family: var(--mono); font-size: 12.5px; color: var(--ink); white-space: nowrap; }
+  .tag {
+    font-family: var(--mono); font-size: 10.5px; padding: 2px 7px;
+    border-radius: 3px; white-space: nowrap; display: inline-block;
+  }
+  .tag-now { background: var(--surface-2); color: var(--ink-soft); }
+  .tag-goal { background: var(--lock); color: #FFFFFF; }
+  :root[data-theme="dark"] .tag-goal { color: #16202C; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .tag-goal { color: #16202C; }
+  }
+
+  hr.rule { border: none; border-top: 1px solid var(--line); margin: 0 0 40px; }
+  a { color: var(--dev); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  @media (max-width: 700px) {
+    body { padding: 0 16px 72px; }
+    header.masthead { padding-top: 44px; }
+    ol.steps li { grid-template-columns: 30px 1fr; gap: 12px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Terraform · Backend remoto · AWS</p>
+    <h1>Estado compartido sin riesgo de corrupción</h1>
+    <p class="standfirst">
+      Arquitectura de backend para una plataforma de ingesta en tiempo real (Kinesis + Redshift),
+      diseñada para que varios Data Engineers trabajen en paralelo sin pisarse el estado de Terraform.
+    </p>
+    <div class="meta">
+      <span><b>Aislamiento</b> · una cuenta AWS por entorno</span>
+      <span><b>Estado</b> · S3 versionado + SSE-KMS</span>
+      <span><b>Concurrencia</b> · lock en DynamoDB</span>
+    </div>
+  </header>
+
+  <!-- ============ DIAGRAMA ============ -->
+  <section>
+    <p class="eyebrow">Diagrama de arquitectura</p>
+    <h2>Dos cuentas, dos estados, ningún recurso compartido</h2>
+    <p class="lede prose">
+      Cada entorno vive en su propia cuenta de AWS con su bucket de estado, su tabla de bloqueo y su
+      clave de cifrado. Las flechas numeradas son el ciclo que ejecuta Terraform en cada corrida.
+    </p>
+
+    <figure class="sheet">
+      <svg viewBox="0 0 1130 660" role="img" aria-label="Diagrama: un ingeniero de datos y un pipeline de CI/CD disparan Terraform, que asume un rol en dos cuentas AWS separadas. Cada cuenta contiene su propia tabla DynamoDB de bloqueo, su bucket S3 de estado cifrado y versionado, y sus recursos gestionados. El ciclo numerado es: 1 bloquear en DynamoDB, 2 leer el estado de S3, 3 aplicar cambios en los recursos, 4 escribir el estado en S3, 5 liberar el bloqueo en DynamoDB.">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+            <polygon points="0,1 10,5 0,9" fill="#4A5A6B"/>
+          </marker>
+          <marker id="arl" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+            <polygon points="0,1 10,5 0,9" fill="#A9700E"/>
+          </marker>
+        </defs>
+
+        <!-- ---------- iniciadores ---------- -->
+        <rect x="315" y="20" width="210" height="58" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+        <text x="420" y="45" text-anchor="middle" font-size="13.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">Ingeniero de Datos</text>
+        <text x="420" y="63" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">terraform CLI · cambio manual</text>
+
+        <rect x="605" y="20" width="210" height="58" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+        <text x="710" y="45" text-anchor="middle" font-size="13.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">Pipeline CI/CD</text>
+        <text x="710" y="63" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">plan / apply automatizado</text>
+
+        <line x1="420" y1="78" x2="420" y2="102" stroke="#4A5A6B" stroke-width="1.4"/>
+        <line x1="710" y1="78" x2="710" y2="102" stroke="#4A5A6B" stroke-width="1.4"/>
+        <line x1="290" y1="102" x2="840" y2="102" stroke="#4A5A6B" stroke-width="1.4"/>
+        <line x1="290" y1="102" x2="290" y2="136" stroke="#4A5A6B" stroke-width="1.4" marker-end="url(#ar)"/>
+        <line x1="840" y1="102" x2="840" y2="136" stroke="#4A5A6B" stroke-width="1.4" marker-end="url(#ar)"/>
+        <text x="565" y="95" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">sts:AssumeRole → rol de despliegue propio de cada cuenta</text>
+        <text x="299" y="125" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">apply · dev</text>
+        <text x="831" y="125" text-anchor="end" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">apply · prod</text>
+
+        <!-- ---------- contenedor DEV ---------- -->
+        <rect x="20" y="140" width="515" height="355" rx="10" fill="#FCFDFD" stroke="#0F6E68" stroke-width="1.4"/>
+        <text x="38" y="170" font-size="11" font-weight="700" fill="#0F6E68" font-family="ui-monospace, Consolas, monospace" letter-spacing="0.8">CUENTA AWS · DEV</text>
+        <text x="517" y="170" text-anchor="end" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">111122223333</text>
+
+        <rect x="38" y="188" width="479" height="54" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+        <text x="277" y="211" text-anchor="middle" font-size="13.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">Terraform</text>
+        <text x="277" y="230" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">backend "s3" → s3://tfstate-dev/streaming.tfstate</text>
+
+        <line x1="75" y1="242" x2="75" y2="348" stroke="#A9700E" stroke-width="1.7" marker-end="url(#arl)"/>
+        <circle cx="75" cy="270" r="11" fill="#A9700E"/>
+        <text x="75" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">1</text>
+        <text x="75" y="302" text-anchor="middle" font-size="9" fill="#A9700E" font-family="ui-monospace, Consolas, monospace">bloquea</text>
+
+        <line x1="140" y1="242" x2="140" y2="348" stroke="#A9700E" stroke-width="1.7" stroke-dasharray="5 4" marker-end="url(#arl)"/>
+        <circle cx="140" cy="270" r="11" fill="#A9700E"/>
+        <text x="140" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">5</text>
+        <text x="140" y="302" text-anchor="middle" font-size="9" fill="#A9700E" font-family="ui-monospace, Consolas, monospace">libera</text>
+
+        <line x1="240" y1="242" x2="240" y2="348" stroke="#4A5A6B" stroke-width="1.7" marker-end="url(#ar)"/>
+        <circle cx="240" cy="270" r="11" fill="#3D4C5B"/>
+        <text x="240" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">2</text>
+        <text x="240" y="302" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">lee</text>
+
+        <line x1="305" y1="242" x2="305" y2="348" stroke="#4A5A6B" stroke-width="1.7" marker-end="url(#ar)"/>
+        <circle cx="305" cy="270" r="11" fill="#3D4C5B"/>
+        <text x="305" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">4</text>
+        <text x="305" y="302" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">escribe</text>
+
+        <line x1="440" y1="242" x2="440" y2="348" stroke="#4A5A6B" stroke-width="1.7" marker-end="url(#ar)"/>
+        <circle cx="440" cy="270" r="11" fill="#3D4C5B"/>
+        <text x="440" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">3</text>
+        <text x="440" y="302" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">aplica</text>
+
+        <rect x="38" y="350" width="140" height="120" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+        <text x="108" y="374" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">DynamoDB · lock</text>
+        <text x="108" y="396" text-anchor="middle" font-size="12.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">locks-dev</text>
+        <line x1="56" y1="410" x2="160" y2="410" stroke="#E4E9EE" stroke-width="1"/>
+        <text x="108" y="430" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">PK: LockID</text>
+        <text x="108" y="448" text-anchor="middle" font-size="9" fill="#A9700E" font-family="ui-monospace, Consolas, monospace">cifrado CMK dev</text>
+
+        <rect x="190" y="350" width="165" height="120" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+        <text x="272" y="374" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">Amazon S3 · state</text>
+        <text x="272" y="396" text-anchor="middle" font-size="12.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">tfstate-dev</text>
+        <line x1="208" y1="410" x2="337" y2="410" stroke="#E4E9EE" stroke-width="1"/>
+        <text x="272" y="430" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">obj: streaming.tfstate</text>
+        <text x="272" y="448" text-anchor="middle" font-size="9" fill="#A9700E" font-family="ui-monospace, Consolas, monospace">SSE-KMS · versioning ON</text>
+
+        <rect x="367" y="350" width="150" height="120" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+        <text x="442" y="374" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">Recursos AWS</text>
+        <text x="442" y="396" text-anchor="middle" font-size="12.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">Plataforma Dev</text>
+        <line x1="385" y1="410" x2="499" y2="410" stroke="#E4E9EE" stroke-width="1"/>
+        <text x="442" y="430" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">Kinesis · Redshift</text>
+        <text x="442" y="448" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">S3 raw · IAM</text>
+
+        <!-- ---------- contenedor PROD ---------- -->
+        <rect x="595" y="140" width="515" height="355" rx="10" fill="#FDFCFC" stroke="#A44A3E" stroke-width="1.4"/>
+        <text x="613" y="170" font-size="11" font-weight="700" fill="#A44A3E" font-family="ui-monospace, Consolas, monospace" letter-spacing="0.8">CUENTA AWS · PROD</text>
+        <text x="1092" y="170" text-anchor="end" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">444455556666</text>
+
+        <rect x="613" y="188" width="479" height="54" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+        <text x="852" y="211" text-anchor="middle" font-size="13.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">Terraform</text>
+        <text x="852" y="230" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">backend "s3" → s3://tfstate-prod/streaming.tfstate</text>
+
+        <line x1="650" y1="242" x2="650" y2="348" stroke="#A9700E" stroke-width="1.7" marker-end="url(#arl)"/>
+        <circle cx="650" cy="270" r="11" fill="#A9700E"/>
+        <text x="650" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">1</text>
+        <text x="650" y="302" text-anchor="middle" font-size="9" fill="#A9700E" font-family="ui-monospace, Consolas, monospace">bloquea</text>
+
+        <line x1="715" y1="242" x2="715" y2="348" stroke="#A9700E" stroke-width="1.7" stroke-dasharray="5 4" marker-end="url(#arl)"/>
+        <circle cx="715" cy="270" r="11" fill="#A9700E"/>
+        <text x="715" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">5</text>
+        <text x="715" y="302" text-anchor="middle" font-size="9" fill="#A9700E" font-family="ui-monospace, Consolas, monospace">libera</text>
+
+        <line x1="815" y1="242" x2="815" y2="348" stroke="#4A5A6B" stroke-width="1.7" marker-end="url(#ar)"/>
+        <circle cx="815" cy="270" r="11" fill="#3D4C5B"/>
+        <text x="815" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">2</text>
+        <text x="815" y="302" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">lee</text>
+
+        <line x1="880" y1="242" x2="880" y2="348" stroke="#4A5A6B" stroke-width="1.7" marker-end="url(#ar)"/>
+        <circle cx="880" cy="270" r="11" fill="#3D4C5B"/>
+        <text x="880" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">4</text>
+        <text x="880" y="302" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">escribe</text>
+
+        <line x1="1015" y1="242" x2="1015" y2="348" stroke="#4A5A6B" stroke-width="1.7" marker-end="url(#ar)"/>
+        <circle cx="1015" cy="270" r="11" fill="#3D4C5B"/>
+        <text x="1015" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">3</text>
+        <text x="1015" y="302" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">aplica</text>
+
+        <rect x="613" y="350" width="140" height="120" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+        <text x="683" y="374" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">DynamoDB · lock</text>
+        <text x="683" y="396" text-anchor="middle" font-size="12.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">locks-prod</text>
+        <line x1="631" y1="410" x2="735" y2="410" stroke="#E4E9EE" stroke-width="1"/>
+        <text x="683" y="430" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">PK: LockID</text>
+        <text x="683" y="448" text-anchor="middle" font-size="9" fill="#A9700E" font-family="ui-monospace, Consolas, monospace">cifrado CMK prod</text>
+
+        <rect x="765" y="350" width="165" height="120" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+        <text x="847" y="374" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">Amazon S3 · state</text>
+        <text x="847" y="396" text-anchor="middle" font-size="12.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">tfstate-prod</text>
+        <line x1="783" y1="410" x2="912" y2="410" stroke="#E4E9EE" stroke-width="1"/>
+        <text x="847" y="430" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">obj: streaming.tfstate</text>
+        <text x="847" y="448" text-anchor="middle" font-size="9" fill="#A9700E" font-family="ui-monospace, Consolas, monospace">SSE-KMS · versioning ON</text>
+
+        <rect x="942" y="350" width="150" height="120" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+        <text x="1017" y="374" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">Recursos AWS</text>
+        <text x="1017" y="396" text-anchor="middle" font-size="12.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">Plataforma Prod</text>
+        <line x1="960" y1="410" x2="1074" y2="410" stroke="#E4E9EE" stroke-width="1"/>
+        <text x="1017" y="430" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">Kinesis · Redshift</text>
+        <text x="1017" y="448" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">S3 raw · IAM</text>
+
+        <!-- ---------- divisor de cuentas ---------- -->
+        <line x1="565" y1="140" x2="565" y2="495" stroke="#8E9CAA" stroke-width="1.4" stroke-dasharray="6 5"/>
+        <rect x="551" y="248" width="28" height="142" fill="#FFFFFF"/>
+        <text x="565" y="319" transform="rotate(-90 565 319)" text-anchor="middle" dominant-baseline="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">límite de cuenta AWS</text>
+
+        <!-- ---------- gobernanza ---------- -->
+        <rect x="20" y="525" width="1090" height="115" rx="8" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+        <text x="42" y="552" font-size="10.5" font-weight="700" fill="#131C26" font-family="ui-monospace, Consolas, monospace" letter-spacing="0.9">SEGURIDAD Y GOBERNANZA</text>
+
+        <rect x="42" y="572" width="6" height="6" fill="#A9700E"/>
+        <text x="58" y="579" font-size="10.5" fill="#3D4C5B" font-family="system-ui, sans-serif">S3 cifrado con SSE-KMS usando una CMK propia de cada cuenta</text>
+        <rect x="42" y="598" width="6" height="6" fill="#A9700E"/>
+        <text x="58" y="605" font-size="10.5" fill="#3D4C5B" font-family="system-ui, sans-serif">S3 versioning activo — permite volver a una versión anterior del state</text>
+        <rect x="42" y="624" width="6" height="6" fill="#A9700E"/>
+        <text x="58" y="631" font-size="10.5" fill="#3D4C5B" font-family="system-ui, sans-serif">DynamoDB cifrado con CMK; el lock es una escritura condicional</text>
+
+        <rect x="580" y="572" width="6" height="6" fill="#A9700E"/>
+        <text x="596" y="579" font-size="10.5" fill="#3D4C5B" font-family="system-ui, sans-serif">Ninguna clave KMS se comparte entre cuentas: sin dependencia cruzada</text>
+        <rect x="580" y="598" width="6" height="6" fill="#A9700E"/>
+        <text x="596" y="605" font-size="10.5" fill="#3D4C5B" font-family="system-ui, sans-serif">Credenciales, cuotas y permisos IAM independientes por entorno</text>
+        <rect x="580" y="624" width="6" height="6" fill="#A9700E"/>
+        <text x="596" y="631" font-size="10.5" fill="#3D4C5B" font-family="system-ui, sans-serif">El state nunca vive en la máquina de un ingeniero</text>
+      </svg>
+
+      <figcaption>
+        El bloqueo está en ámbar porque es el mecanismo que hace seguro el estado compartido:
+        sin los pasos 1 y 5, el backend sigue siendo remoto pero deja de estar protegido contra
+        escrituras simultáneas. La línea punteada central marca el límite de cuenta AWS — Dev y Prod
+        no comparten bucket, tabla, clave de cifrado ni credenciales.
+      </figcaption>
+    </figure>
+    <p class="sheet-note">El diagrama se muestra sobre fondo claro en ambos temas, para que se exporte igual a como se ve.</p>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============ CICLO ============ -->
+  <section>
+    <p class="eyebrow">Flujo de operación</p>
+    <h2>El ciclo que corre en cada <code>terraform apply</code></h2>
+    <p class="lede prose">
+      Los cinco pasos ocurren siempre en este orden, dentro de una sola cuenta. Una corrida en Dev
+      y una en Prod son dos ciclos completamente independientes que nunca tocan los mismos objetos.
+    </p>
+
+    <ol class="steps">
+      <li class="is-lock">
+        <span class="badge">1</span>
+        <span>
+          <span class="step-t">Intento de bloqueo — DynamoDB</span>
+          <span class="step-d">
+            Terraform escribe un ítem con <code>LockID</code> en <code>locks-&lt;entorno&gt;</code>,
+            con la condición de que ese ítem no exista todavía. Si otra corrida ya lo escribió,
+            la condición falla y Terraform se detiene con un aviso en vez de avanzar.
+          </span>
+        </span>
+      </li>
+      <li>
+        <span class="badge">2</span>
+        <span>
+          <span class="step-t">Lectura del estado — S3</span>
+          <span class="step-d">
+            Descarga <code>tfstate-&lt;entorno&gt;</code> y lo descifra con la CMK de la cuenta.
+            Ese archivo es el inventario de lo que ya existe.
+          </span>
+        </span>
+      </li>
+      <li>
+        <span class="badge">3</span>
+        <span>
+          <span class="step-t">Aplicación de cambios — Recursos AWS</span>
+          <span class="step-d">
+            Compara el estado contra el código, calcula la diferencia y llama a las APIs de AWS
+            para crear, modificar o eliminar los recursos de la plataforma de streaming.
+          </span>
+        </span>
+      </li>
+      <li>
+        <span class="badge">4</span>
+        <span>
+          <span class="step-t">Actualización del estado — S3</span>
+          <span class="step-d">
+            Sube el estado nuevo. El versioning del bucket conserva la versión anterior,
+            así que un estado corrupto se puede revertir.
+          </span>
+        </span>
+      </li>
+      <li class="is-lock">
+        <span class="badge">5</span>
+        <span>
+          <span class="step-t">Liberación del bloqueo — DynamoDB</span>
+          <span class="step-d">
+            Borra el ítem <code>LockID</code>. Recién ahí otra corrida puede tomar el lock y empezar
+            su propio ciclo.
+          </span>
+        </span>
+      </li>
+    </ol>
+
+    <div class="callout">
+      <span class="k">Por qué el orden importa</span>
+      <p>
+        El bloqueo se toma <strong>antes</strong> de leer y se libera <strong>después</strong> de escribir.
+        Ese envoltorio es lo que convierte "leer, calcular y escribir" en una operación indivisible:
+        nadie puede leer el estado en el medio y trabajar sobre una foto que ya quedó vieja.
+      </p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============ JUSTIFICACIÓN ============ -->
+  <section class="prose">
+    <p class="eyebrow">Justificación</p>
+    <h2>Por qué esta arquitectura reduce el riesgo de corrupción</h2>
+
+    <p>
+      Esta arquitectura reduce el riesgo de corrupción del state porque combina dos mecanismos que
+      resuelven problemas distintos. El primero es el <strong>backend remoto</strong>: el estado deja
+      de vivir en el disco de un ingeniero y pasa a un bucket de S3 al que todo el equipo apunta, de
+      modo que no existen copias divergentes del inventario de infraestructura. El segundo es el
+      <strong>locking en DynamoDB</strong>: antes de leer, Terraform escribe un ítem de bloqueo con una
+      escritura condicional, una operación que la base garantiza atómica. Si dos ejecuciones arrancan
+      a la vez, solo una consigue escribir ese ítem; la segunda recibe el error y se detiene sin haber
+      tocado nada. Sin ese lock, ambas leerían la misma versión del estado, cada una calcularía su plan
+      sobre una foto desactualizada y la última en escribir borraría el registro de los recursos que
+      creó la otra: recursos reales existiendo en AWS sin que Terraform sepa que existen.
+    </p>
+
+    <p>
+      La estrategia <strong>multi-cuenta</strong> reduce el blast radius, es decir, el alcance del daño
+      cuando algo sale mal. El estado de Dev y el de Prod no comparten el bucket, la tabla de bloqueo,
+      la clave KMS ni las credenciales: son objetos en cuentas de AWS distintas. Un <code>destroy</code>
+      ejecutado por error, un backend mal configurado o una credencial filtrada en Dev no pueden alcanzar
+      el estado de Prod, porque desde la cuenta de Dev sencillamente no hay ruta hacia esos recursos.
+      El aislamiento no depende de que nadie se equivoque al escribir un prefijo: lo impone el límite de
+      cuenta, que es el borde de seguridad más fuerte que ofrece AWS. El pipeline de CI/CD accede a cada
+      entorno asumiendo un rol específico de esa cuenta mediante <code>sts:AssumeRole</code>, de manera que
+      los permisos para desplegar en producción son un privilegio explícito y auditable, no un efecto
+      secundario de tener acceso al repositorio.
+    </p>
+
+    <p>
+      Por último, las medidas de gobernanza aportan resiliencia y confidencialidad. El
+      <strong>versionado de S3</strong> guarda cada revisión del archivo de estado, así que una corrida
+      interrumpida a mitad de la escritura o un estado corrupto se recuperan restaurando la versión
+      inmediatamente anterior, sin reconstruir el inventario a mano. El <strong>cifrado con KMS</strong>
+      protege un archivo que es sensible por naturaleza: el state guarda en texto plano los atributos de
+      todo lo que Terraform administra, incluidos endpoints, claves de acceso y contraseñas generadas.
+      Que cada cuenta use su propia CMK es deliberado — una clave compartida volvería a crear la
+      dependencia entre entornos que el diseño busca eliminar. Frente a un estado local, donde no hay
+      bloqueo, ni historial, ni cifrado, ni copia recuperable, esta arquitectura convierte el archivo más
+      frágil del proyecto en el mejor protegido.
+    </p>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============ ESCALA ============ -->
+  <section>
+    <p class="eyebrow">Estrategia de separación</p>
+    <h2>Tres niveles de aislamiento, no dos</h2>
+    <p class="lede prose">
+      "Separar Dev de Prod" no es una decisión binaria: es una escala. Cada nivel elimina una
+      superficie de error más, a cambio de más trabajo de montaje.
+    </p>
+
+    <div class="tablewrap">
+      <table>
+        <caption>De menor a mayor aislamiento</caption>
+        <thead>
+          <tr>
+            <th>Nivel</th>
+            <th>Qué separa</th>
+            <th>Qué sigue compartido</th>
+            <th>Riesgo que queda</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="lvl">Prefijo (<code>key</code>)<br><span class="tag tag-now">habitual al empezar</span></td>
+            <td>Un archivo de estado por entorno dentro del mismo bucket.</td>
+            <td>Bucket, tabla de locks, clave KMS, cuenta y credenciales.</td>
+            <td>Un error de tipeo en la <code>key</code> apunta a Prod. Quien puede leer un estado, puede leerlos todos.</td>
+          </tr>
+          <tr>
+            <td class="lvl">Bucket + tabla</td>
+            <td>Recursos físicos distintos por entorno.</td>
+            <td>Cuenta AWS, credenciales, límites de servicio.</td>
+            <td>Una credencial comprometida sigue alcanzando ambos entornos.</td>
+          </tr>
+          <tr>
+            <td class="lvl">Cuenta AWS<br><span class="tag tag-goal">este diseño</span></td>
+            <td>Todo: bucket, tabla, claves, IAM, cuotas y facturación.</td>
+            <td>Nada.</td>
+            <td>Requiere AWS Organizations y roles cruzados para el pipeline.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <span class="k">El error que evita</span>
+      <p>
+        Mezclar Dev y Prod en el <strong>mismo archivo</strong> de estado es el fallo más grave de todos,
+        y no aparece en la tabla porque no es un nivel de aislamiento: es la ausencia de cualquiera.
+        Con un solo state, un <code>terraform destroy</code> pensado para Dev destruye producción,
+        porque para Terraform ambos entornos son el mismo inventario.
+      </p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============ GLOSARIO ============ -->
+  <section>
+    <p class="eyebrow">Apéndice</p>
+    <h2>Qué es cada pieza, desde cero</h2>
+    <p class="lede prose">
+      Las definiciones mínimas para poder defender el diagrama sin apoyarse en las siglas.
+    </p>
+
+    <dl class="gloss">
+      <div>
+        <dt>El state (<code>.tfstate</code>)</dt>
+        <dd>
+          <p>
+            Un archivo JSON donde Terraform anota todo lo que creó y con qué identificador real de AWS.
+            Es su memoria: sin él, Terraform no sabe que tu VPC existe y, en la corrida siguiente,
+            intenta crearla de nuevo.
+          </p>
+          <p>
+            Todo el ejercicio gira alrededor de proteger este archivo, porque es el único componente
+            del sistema que no se puede reconstruir mirando el código.
+          </p>
+        </dd>
+      </div>
+      <div>
+        <dt>Backend remoto</dt>
+        <dd>
+          <p>
+            La configuración que le dice a Terraform dónde guardar el state. Por defecto es el disco
+            local; un backend remoto lo manda a S3. Es lo que permite que dos personas trabajen sobre
+            el mismo inventario en vez de sobre dos copias que divergen en silencio.
+          </p>
+        </dd>
+      </div>
+      <div>
+        <dt>Lock (bloqueo) y condición de carrera</dt>
+        <dd>
+          <p>
+            Una condición de carrera ocurre cuando dos procesos leen el mismo dato, lo modifican por
+            separado y escriben encima del otro. El resultado no es la suma de los dos cambios: es el
+            del que llegó último, y el trabajo del primero desaparece.
+          </p>
+          <p>
+            Un lock lo evita obligando a pedir turno. DynamoDB sirve para esto porque permite decir
+            "escribí este ítem <em>solo si</em> no existe" y garantiza que, entre miles de intentos
+            simultáneos, exactamente uno gana.
+          </p>
+        </dd>
+      </div>
+      <div>
+        <dt>Amazon S3 y el versionado</dt>
+        <dd>
+          <p>
+            S3 es el almacenamiento de archivos de AWS; los archivos viven en "buckets", cuyo nombre es
+            único en todo el mundo. Con versioning activado, cada vez que se sobrescribe un archivo el
+            anterior no se borra: queda en el historial y se puede restaurar.
+          </p>
+          <p>
+            Aplicado al state, eso significa que una escritura fallida se deshace volviendo a la versión
+            anterior, en lugar de reconstruir el inventario recurso por recurso.
+          </p>
+        </dd>
+      </div>
+      <div>
+        <dt>KMS y por qué el state es sensible</dt>
+        <dd>
+          <p>
+            KMS es el servicio de claves de cifrado de AWS. Una CMK es una clave que administrás vos,
+            con su propia política de acceso. "SSE-KMS" quiere decir que S3 cifra el objeto al guardarlo
+            usando esa clave, y solo lo descifra para quien tenga permiso de usarla.
+          </p>
+          <p>
+            Hace falta porque el state guarda en texto plano los atributos de todo lo gestionado: si
+            Terraform crea una base de datos con contraseña, esa contraseña queda escrita en el archivo.
+          </p>
+        </dd>
+      </div>
+      <div>
+        <dt>Cuenta AWS y blast radius</dt>
+        <dd>
+          <p>
+            Una cuenta de AWS es un contenedor completamente separado: recursos, usuarios, permisos,
+            límites y factura propios. Cruzar de una a otra exige un permiso explícito
+            (<code>sts:AssumeRole</code>), y es el aislamiento más fuerte que existe en AWS.
+          </p>
+          <p>
+            "Blast radius" es el radio de explosión: hasta dónde llega el daño de un error. Separar por
+            cuenta lo reduce al mínimo, porque desde Dev no hay ninguna ruta hacia los recursos de Prod.
+          </p>
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+</div>

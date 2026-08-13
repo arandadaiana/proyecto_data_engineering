@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1130" height="660" viewBox="0 0 1130 660" role="img" aria-label="Arquitectura multi-cuenta: un ingeniero de datos y un pipeline CI/CD asumen roles en dos cuentas AWS separadas, dev y prod. Cada cuenta tiene su propia tabla DynamoDB de locking, su propio bucket S3 de estado cifrado con KMS y versionado, y sus propios recursos. El ciclo numerado en cada cuenta es: 1 bloquear, 2 leer estado, 3 aplicar cambios, 4 escribir estado, 5 liberar bloqueo. Una linea punteada marca el limite de cuenta AWS: no hay recursos compartidos entre entornos.">
+  <rect width="1130" height="660" fill="#FFFFFF"/>
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+      <polygon points="0,1 10,5 0,9" fill="#4A5A6B"/>
+    </marker>
+    <marker id="arl" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+      <polygon points="0,1 10,5 0,9" fill="#A9700E"/>
+    </marker>
+  </defs>
+
+  <!-- ============ INICIADORES ============ -->
+  <rect x="315" y="20" width="210" height="58" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+  <text x="420" y="45" text-anchor="middle" font-size="13.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">Ingeniero de Datos</text>
+  <text x="420" y="63" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">terraform CLI · cambio manual</text>
+
+  <rect x="605" y="20" width="210" height="58" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+  <text x="710" y="45" text-anchor="middle" font-size="13.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">Pipeline CI/CD</text>
+  <text x="710" y="63" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">plan / apply automatizado</text>
+
+  <line x1="420" y1="78" x2="420" y2="102" stroke="#4A5A6B" stroke-width="1.4"/>
+  <line x1="710" y1="78" x2="710" y2="102" stroke="#4A5A6B" stroke-width="1.4"/>
+  <line x1="290" y1="102" x2="840" y2="102" stroke="#4A5A6B" stroke-width="1.4"/>
+  <line x1="290" y1="102" x2="290" y2="136" stroke="#4A5A6B" stroke-width="1.4" marker-end="url(#ar)"/>
+  <line x1="840" y1="102" x2="840" y2="136" stroke="#4A5A6B" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="565" y="95" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">sts:AssumeRole → rol de despliegue propio de cada cuenta</text>
+  <text x="299" y="125" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">apply · dev</text>
+  <text x="831" y="125" text-anchor="end" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">apply · prod</text>
+
+  <!-- ============ CUENTA DEV ============ -->
+  <rect x="20" y="140" width="515" height="355" rx="10" fill="#FCFDFD" stroke="#0F6E68" stroke-width="1.4"/>
+  <text x="38" y="170" font-size="11" font-weight="700" fill="#0F6E68" font-family="ui-monospace, Consolas, monospace" letter-spacing="0.8">CUENTA AWS · DEV</text>
+  <text x="517" y="170" text-anchor="end" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">111122223333</text>
+
+  <rect x="38" y="188" width="479" height="54" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+  <text x="277" y="211" text-anchor="middle" font-size="13.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">Terraform</text>
+  <text x="277" y="230" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">backend "s3" → s3://tfstate-dev/streaming.tfstate</text>
+
+  <line x1="75" y1="242" x2="75" y2="348" stroke="#A9700E" stroke-width="1.7" marker-end="url(#arl)"/>
+  <circle cx="75" cy="270" r="11" fill="#A9700E"/>
+  <text x="75" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">1</text>
+  <text x="75" y="302" text-anchor="middle" font-size="9" fill="#A9700E" font-family="ui-monospace, Consolas, monospace">bloquea</text>
+
+  <line x1="140" y1="242" x2="140" y2="348" stroke="#A9700E" stroke-width="1.7" stroke-dasharray="5 4" marker-end="url(#arl)"/>
+  <circle cx="140" cy="270" r="11" fill="#A9700E"/>
+  <text x="140" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">5</text>
+  <text x="140" y="302" text-anchor="middle" font-size="9" fill="#A9700E" font-family="ui-monospace, Consolas, monospace">libera</text>
+
+  <line x1="240" y1="242" x2="240" y2="348" stroke="#4A5A6B" stroke-width="1.7" marker-end="url(#ar)"/>
+  <circle cx="240" cy="270" r="11" fill="#3D4C5B"/>
+  <text x="240" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">2</text>
+  <text x="240" y="302" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">lee</text>
+
+  <line x1="305" y1="242" x2="305" y2="348" stroke="#4A5A6B" stroke-width="1.7" marker-end="url(#ar)"/>
+  <circle cx="305" cy="270" r="11" fill="#3D4C5B"/>
+  <text x="305" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">4</text>
+  <text x="305" y="302" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">escribe</text>
+
+  <line x1="440" y1="242" x2="440" y2="348" stroke="#4A5A6B" stroke-width="1.7" marker-end="url(#ar)"/>
+  <circle cx="440" cy="270" r="11" fill="#3D4C5B"/>
+  <text x="440" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">3</text>
+  <text x="440" y="302" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">aplica</text>
+
+  <rect x="38" y="350" width="140" height="120" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+  <text x="108" y="374" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">DynamoDB · lock</text>
+  <text x="108" y="396" text-anchor="middle" font-size="12.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">locks-dev</text>
+  <line x1="56" y1="410" x2="160" y2="410" stroke="#E4E9EE" stroke-width="1"/>
+  <text x="108" y="430" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">PK: LockID</text>
+  <text x="108" y="448" text-anchor="middle" font-size="9" fill="#A9700E" font-family="ui-monospace, Consolas, monospace">cifrado CMK dev</text>
+
+  <rect x="190" y="350" width="165" height="120" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+  <text x="272" y="374" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">Amazon S3 · state</text>
+  <text x="272" y="396" text-anchor="middle" font-size="12.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">tfstate-dev</text>
+  <line x1="208" y1="410" x2="337" y2="410" stroke="#E4E9EE" stroke-width="1"/>
+  <text x="272" y="430" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">obj: streaming.tfstate</text>
+  <text x="272" y="448" text-anchor="middle" font-size="9" fill="#A9700E" font-family="ui-monospace, Consolas, monospace">SSE-KMS · versioning ON</text>
+
+  <rect x="367" y="350" width="150" height="120" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+  <text x="442" y="374" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">Recursos AWS</text>
+  <text x="442" y="396" text-anchor="middle" font-size="12.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">Plataforma Dev</text>
+  <line x1="385" y1="410" x2="499" y2="410" stroke="#E4E9EE" stroke-width="1"/>
+  <text x="442" y="430" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">Kinesis · Redshift</text>
+  <text x="442" y="448" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">S3 raw · VPC · IAM</text>
+
+  <!-- ============ CUENTA PROD ============ -->
+  <rect x="595" y="140" width="515" height="355" rx="10" fill="#FDFCFC" stroke="#A44A3E" stroke-width="1.4"/>
+  <text x="613" y="170" font-size="11" font-weight="700" fill="#A44A3E" font-family="ui-monospace, Consolas, monospace" letter-spacing="0.8">CUENTA AWS · PROD</text>
+  <text x="1092" y="170" text-anchor="end" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">444455556666</text>
+
+  <rect x="613" y="188" width="479" height="54" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+  <text x="852" y="211" text-anchor="middle" font-size="13.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">Terraform</text>
+  <text x="852" y="230" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">backend "s3" → s3://tfstate-prod/streaming.tfstate</text>
+
+  <line x1="650" y1="242" x2="650" y2="348" stroke="#A9700E" stroke-width="1.7" marker-end="url(#arl)"/>
+  <circle cx="650" cy="270" r="11" fill="#A9700E"/>
+  <text x="650" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">1</text>
+  <text x="650" y="302" text-anchor="middle" font-size="9" fill="#A9700E" font-family="ui-monospace, Consolas, monospace">bloquea</text>
+
+  <line x1="715" y1="242" x2="715" y2="348" stroke="#A9700E" stroke-width="1.7" stroke-dasharray="5 4" marker-end="url(#arl)"/>
+  <circle cx="715" cy="270" r="11" fill="#A9700E"/>
+  <text x="715" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">5</text>
+  <text x="715" y="302" text-anchor="middle" font-size="9" fill="#A9700E" font-family="ui-monospace, Consolas, monospace">libera</text>
+
+  <line x1="815" y1="242" x2="815" y2="348" stroke="#4A5A6B" stroke-width="1.7" marker-end="url(#ar)"/>
+  <circle cx="815" cy="270" r="11" fill="#3D4C5B"/>
+  <text x="815" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">2</text>
+  <text x="815" y="302" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">lee</text>
+
+  <line x1="880" y1="242" x2="880" y2="348" stroke="#4A5A6B" stroke-width="1.7" marker-end="url(#ar)"/>
+  <circle cx="880" cy="270" r="11" fill="#3D4C5B"/>
+  <text x="880" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">4</text>
+  <text x="880" y="302" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">escribe</text>
+
+  <line x1="1015" y1="242" x2="1015" y2="348" stroke="#4A5A6B" stroke-width="1.7" marker-end="url(#ar)"/>
+  <circle cx="1015" cy="270" r="11" fill="#3D4C5B"/>
+  <text x="1015" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF" font-family="ui-monospace, Consolas, monospace">3</text>
+  <text x="1015" y="302" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">aplica</text>
+
+  <rect x="613" y="350" width="140" height="120" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+  <text x="683" y="374" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">DynamoDB · lock</text>
+  <text x="683" y="396" text-anchor="middle" font-size="12.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">locks-prod</text>
+  <line x1="631" y1="410" x2="735" y2="410" stroke="#E4E9EE" stroke-width="1"/>
+  <text x="683" y="430" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">PK: LockID</text>
+  <text x="683" y="448" text-anchor="middle" font-size="9" fill="#A9700E" font-family="ui-monospace, Consolas, monospace">cifrado CMK prod</text>
+
+  <rect x="765" y="350" width="165" height="120" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+  <text x="847" y="374" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">Amazon S3 · state</text>
+  <text x="847" y="396" text-anchor="middle" font-size="12.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">tfstate-prod</text>
+  <line x1="783" y1="410" x2="912" y2="410" stroke="#E4E9EE" stroke-width="1"/>
+  <text x="847" y="430" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">obj: streaming.tfstate</text>
+  <text x="847" y="448" text-anchor="middle" font-size="9" fill="#A9700E" font-family="ui-monospace, Consolas, monospace">SSE-KMS · versioning ON</text>
+
+  <rect x="942" y="350" width="150" height="120" rx="6" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+  <text x="1017" y="374" text-anchor="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">Recursos AWS</text>
+  <text x="1017" y="396" text-anchor="middle" font-size="12.5" font-weight="600" fill="#131C26" font-family="system-ui, sans-serif">Plataforma Prod</text>
+  <line x1="960" y1="410" x2="1074" y2="410" stroke="#E4E9EE" stroke-width="1"/>
+  <text x="1017" y="430" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">Kinesis · Redshift</text>
+  <text x="1017" y="448" text-anchor="middle" font-size="9" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">S3 raw · VPC · IAM</text>
+
+  <!-- ============ DIVISOR DE CUENTAS ============ -->
+  <line x1="565" y1="140" x2="565" y2="495" stroke="#8E9CAA" stroke-width="1.4" stroke-dasharray="6 5"/>
+  <rect x="551" y="248" width="28" height="142" fill="#FFFFFF"/>
+  <text x="565" y="319" transform="rotate(-90 565 319)" text-anchor="middle" dominant-baseline="middle" font-size="9.5" fill="#5A6B7C" font-family="ui-monospace, Consolas, monospace">límite de cuenta AWS</text>
+
+  <!-- ============ GOBERNANZA ============ -->
+  <rect x="20" y="525" width="1090" height="115" rx="8" fill="#FFFFFF" stroke="#B9C4CF" stroke-width="1.2"/>
+  <text x="42" y="552" font-size="10.5" font-weight="700" fill="#131C26" font-family="ui-monospace, Consolas, monospace" letter-spacing="0.9">SEGURIDAD Y GOBERNANZA</text>
+
+  <rect x="42" y="572" width="6" height="6" fill="#A9700E"/>
+  <text x="58" y="579" font-size="10.5" fill="#3D4C5B" font-family="system-ui, sans-serif">S3 cifrado con SSE-KMS usando una CMK propia de cada cuenta</text>
+  <rect x="42" y="598" width="6" height="6" fill="#A9700E"/>
+  <text x="58" y="605" font-size="10.5" fill="#3D4C5B" font-family="system-ui, sans-serif">S3 versioning activo — permite volver a una versión anterior del state</text>
+  <rect x="42" y="624" width="6" height="6" fill="#A9700E"/>
+  <text x="58" y="631" font-size="10.5" fill="#3D4C5B" font-family="system-ui, sans-serif">DynamoDB cifrado con CMK; el lock es una escritura condicional</text>
+
+  <rect x="580" y="572" width="6" height="6" fill="#A9700E"/>
+  <text x="596" y="579" font-size="10.5" fill="#3D4C5B" font-family="system-ui, sans-serif">Ninguna clave KMS se comparte entre cuentas: sin dependencia cruzada</text>
+  <rect x="580" y="598" width="6" height="6" fill="#A9700E"/>
+  <text x="596" y="605" font-size="10.5" fill="#3D4C5B" font-family="system-ui, sans-serif">Credenciales, cuotas y permisos IAM independientes por entorno</text>
+  <rect x="580" y="624" width="6" height="6" fill="#A9700E"/>
+  <text x="596" y="631" font-size="10.5" fill="#3D4C5B" font-family="system-ui, sans-serif">El state nunca vive en la máquina de un ingeniero</text>
+</svg>
