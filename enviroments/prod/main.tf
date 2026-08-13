@@ -2,7 +2,7 @@
 # Consulta el Account ID real en tiempo de ejecución, sin hardcodearlo.
 data "aws_caller_identity" "current" {}
 # 1. Invocación del Módulo de Red Base
-# Los módulos son compartidos por todos los ambientes: viven en la raíz del repo.
+# Mismo módulo que dev y staging: lo único que cambia son las variables.
 module "network" {
 source = "../../modules/network"
 environment = var.environment

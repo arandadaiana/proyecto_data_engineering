@@ -1,0 +1,21 @@
+# ==============================================================================
+# PLANTILLA DE VARIABLES — AMBIENTE PROD
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# ⚠ Este ambiente representa producción. Antes de aplicar cambios acá,
+#   validalos primero en dev y después en staging.
+# ==============================================================================
+
+aws_region = "us-east-1"
+environment = "prod"
+
+# Espacio de red propio: 10.0 (dev) · 10.1 (staging) · 10.2 (prod).
+# No se solapan para que los ambientes puedan interconectarse a futuro.
+vpc_cidr = "10.2.0.0/16"
+private_subnet_cidrs = ["10.2.1.0/24", "10.2.2.0/24"]
+availability_zones = ["us-east-1a", "us-east-1b"]
+
+# ⚠ NO cambiar a true. En producción esta bandera es la última barrera
+#   contra el borrado accidental del Data Lake.
+raw_bucket_force_destroy = false

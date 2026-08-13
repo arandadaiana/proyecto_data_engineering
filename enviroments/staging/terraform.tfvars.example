@@ -1,0 +1,19 @@
+# ==============================================================================
+# PLANTILLA DE VARIABLES — AMBIENTE STAGING
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# Staging replica la forma de producción, pero sigue siendo un ambiente
+# descartable: por eso conserva force_destroy en true.
+# ==============================================================================
+
+aws_region = "us-east-1"
+environment = "staging"
+
+# Espacio de red propio: 10.0 (dev) · 10.1 (staging) · 10.2 (prod).
+# No se solapan para que los ambientes puedan interconectarse a futuro.
+vpc_cidr = "10.1.0.0/16"
+private_subnet_cidrs = ["10.1.1.0/24", "10.1.2.0/24"]
+availability_zones = ["us-east-1a", "us-east-1b"]
+
+raw_bucket_force_destroy = true

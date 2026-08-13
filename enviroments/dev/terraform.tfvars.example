@@ -1,0 +1,35 @@
+# ==============================================================================
+# PLANTILLA DE VARIABLES — AMBIENTE DEV
+#
+# Este archivo SÍ se versiona: documenta qué variables existen y su formato.
+# Para usarlo:
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# y ajustá los valores al ambiente real. El terraform.tfvars resultante
+# queda ignorado por .gitignore.
+# ==============================================================================
+
+# Región de AWS donde se despliega la infraestructura.
+# Ojo: debe coincidir con la región declarada en el backend s3 de provider.tf.
+# Tipo: string · Default en variables.tf: "us-east-1"
+aws_region = "us-east-1"
+
+# Identificador del ambiente. Se propaga a los nombres de recursos
+# (datalake-raw-<env>-<account_id>, role-data-processing-<env>) y a los tags.
+# Tipo: string · Valores esperados: "dev" | "staging" | "prod"
+environment = "dev"
+
+# Bloque CIDR de la VPC. Debe contener a todas las subredes de abajo.
+# Tipo: string · Default en variables.tf: "10.0.0.0/16"
+vpc_cidr = "10.0.0.0/16"
+
+# Una subred por AZ. Ambas listas deben tener la misma cantidad de elementos:
+# el módulo network las recorre en paralelo con count.index.
+# Tipo: list(string)
+private_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
+availability_zones = ["us-east-1a", "us-east-1b"]
+
+# Permite borrar el bucket RAW aunque tenga objetos.
+# Tipo: bool · true en ambientes de práctica, false en producción.
+raw_bucket_force_destroy = true

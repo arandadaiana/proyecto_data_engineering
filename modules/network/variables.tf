@@ -2,6 +2,10 @@ variable "environment" {
 type = string
 description = "Ambiente de despliegue (ej: dev, prod)"
 }
+variable "aws_region" {
+type = string
+description = "Region de AWS. Se usa para construir el service_name del VPC Endpoint de S3, que es distinto en cada region"
+}
 variable "vpc_cidr" {
 type = string
 description = "Rango de direcciones IP para la red VPC"

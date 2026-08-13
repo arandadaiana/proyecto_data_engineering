@@ -1,0 +1,18 @@
+# ==============================================================================
+# PLANTILLA DE VARIABLES — CAPA BOOTSTRAP
+#
+# Copiar a terraform.tfvars antes de correr el bootstrap:
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# Recordá que el bootstrap se despliega UNA sola vez y con state local.
+# ==============================================================================
+
+# Región donde se crean el bucket S3 del state y la tabla DynamoDB de locks.
+# Tipo: string · Default en variables.tf: "us-east-1"
+aws_region = "us-east-1"
+
+# Ambiente asociado al backend. Forma parte del nombre del bucket
+# y de la tabla de locks, así que cambiarlo crea un backend nuevo.
+# Tipo: string · Default en variables.tf: "dev"
+environment = "dev"
