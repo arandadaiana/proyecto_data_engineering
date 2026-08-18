@@ -1,0 +1,19 @@
+# ==============================================================================
+# PLANTILLA - CAPA BOOTSTRAP
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# El bootstrap se despliega UNA sola vez y con state local.
+# ==============================================================================
+
+aws_region  = "us-east-1"
+environment = "dev"
+
+# Los nombres de bucket son unicos a nivel MUNDIAL. Si el apply falla con
+# BucketAlreadyExists, cambia este valor y reflejalo tambien en
+# environments/dev/backend.tf: deben coincidir exactamente.
+state_bucket_name = "coderhouse-tfstate-preentrega1-dev"
+lock_table_name   = "terraform-locks-preentrega1-dev"
+
+# Entorno de practica: permite un destroy limpio del backend.
+force_destroy = true

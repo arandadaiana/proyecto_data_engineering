@@ -1,0 +1,45 @@
+# ==============================================================================
+# GITIGNORE ESTANDAR DE TERRAFORM
+#
+# El repositorio ya tiene un .gitignore en la raiz que cubre estos patrones.
+# Se incluye igualmente aca para que esta carpeta sea autocontenida si se extrae
+# como repositorio independiente.
+# ==============================================================================
+
+# ---- Estado: nunca va a git. Vive en S3 y contiene datos sensibles en claro ---
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# ---- Directorio de trabajo: binarios de providers y modulos descargados -------
+.terraform/
+.terraform.lock.hcl
+
+# ---- Valores de variables: pueden contener datos propios del entorno ----------
+# Los *.tfvars.example SI se versionan: no terminan en .tfvars
+*.tfvars
+*.auto.tfvars
+*.tfvars.json
+
+# ---- Archivos de plan: son binarios y pueden exponer valores del state --------
+*.tfplan
+plan.out
+
+# ---- Credenciales ------------------------------------------------------------
+.aws/
+aws_credentials
+credentials
+*.pem
+*.key
+
+# ---- Editores y sistema operativo --------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# ---- Logs de depuracion de Terraform -----------------------------------------
+crash.log
+crash.*.log
+terraform.log

@@ -10,6 +10,12 @@ tiene su propio código, su propia documentación y se despliega por separado.
 | [`entrega_3/`](entrega_3/) | ✅ Completa | Módulo reutilizable que crea un bucket S3 por entorno con `for_each` sobre un mapa de objetos, versionado condicional y ARNs expuestos como mapa para permitir la composición con otros módulos. |
 | [`entrega_4/`](entrega_4/) | ✅ Completa | Matriz de control de acceso IAM para la plataforma de streaming: separación entre control plane y data plane, tres roles con permisos acotados por ARN, trust policies y estrategia de auditoría. Entregable en PDF. |
 
+### Pre-entregas
+
+| Pre-entrega | Estado | Contenido |
+|---|---|---|
+| [`pre-entrega/pre-entrega-1/`](pre-entrega/pre-entrega-1/) | ✅ Completa | Checkpoint de infraestructura base: backend remoto con locking, VPC privada con Gateway Endpoint a S3, y dos roles IAM (ejecución acotada por prefijo y auditoría de solo lectura). Incluye `PLAN_OUTPUT.md` con un plan real de 18 recursos. |
+
 ---
 
 ## Cómo navegar el repositorio
@@ -25,6 +31,8 @@ que te interese:
   condicional y outputs pensados para la composición entre módulos.
 - **[entrega_4/README.md](entrega_4/README.md)** — matriz IAM de tres roles, permisos de
   soporte con KMS y estrategia de auditoría.
+- **[pre-entrega/pre-entrega-1/README.md](pre-entrega/pre-entrega-1/README.md)** — checkpoint
+  de infraestructura base, con pasos de despliegue reproducibles desde cero.
 
 Las cuatro entregas recorren el mismo problema desde ángulos distintos: la primera
 **construye** la infraestructura, la segunda diseña cómo **proteger el estado** que esa

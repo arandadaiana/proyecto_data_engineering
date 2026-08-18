@@ -1,0 +1,31 @@
+# ==============================================================================
+# PLANTILLA - ENTORNO DEV
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# Terraform carga terraform.tfvars automaticamente al ejecutar desde ESTA
+# carpeta. Un .tfvars en la raiz del repositorio nunca se lee.
+# El archivo resultante queda ignorado por .gitignore.
+# ==============================================================================
+
+# Debe coincidir con la region declarada en backend.tf.
+aws_region  = "us-east-1"
+environment = "dev"
+
+# Prefijo del bucket del Lakehouse. El nombre final sera
+# <project_prefix>-<environment>-<account_id>.
+project_prefix = "lakehouse-raw"
+
+# Espacio de red del entorno. Las subredes deben quedar contenidas en vpc_cidr.
+vpc_cidr             = "10.0.0.0/16"
+private_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
+
+# Vacio = descubrir automaticamente las AZ de la region.
+# Para fijarlas: ["us-east-1a", "us-east-1b"]
+availability_zones = []
+
+# Prefijo sobre el que el rol de procesamiento puede leer y escribir.
+data_prefix = "raw/"
+
+# Entorno de practica: permite un destroy limpio.
+raw_bucket_force_destroy = true
