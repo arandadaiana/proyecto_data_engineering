@@ -1,0 +1,30 @@
+# ==============================================================================
+# PLANTILLA DE VARIABLES — EJEMPLO DEL MÓDULO data_lake
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# El terraform.tfvars resultante queda ignorado por .gitignore.
+# ==============================================================================
+
+aws_region = "us-east-1"
+
+# Prefijo del dominio de datos. Solo minúsculas, números y guiones:
+# el módulo lo valida y falla en el plan si no cumple.
+project_prefix = "datalake-ventas"
+
+# Un entorno por entrada. La clave es el nombre y forma parte del bucket;
+# versioning_enabled decide si el historial de versiones queda activo.
+#
+# Para agregar un entorno nuevo alcanza con sumar una entrada acá:
+# Terraform crea solo ese, sin tocar los existentes.
+environments = {
+  dev = {
+    versioning_enabled = false
+  }
+  staging = {
+    versioning_enabled = false
+  }
+  prod = {
+    versioning_enabled = true
+  }
+}

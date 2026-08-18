@@ -7,6 +7,7 @@ tiene su propio código, su propia documentación y se despliega por separado.
 |---|---|---|
 | [`entrega_1/`](entrega_1/) | ✅ Completa | Infraestructura base en AWS con Terraform: VPC con subredes privadas, S3 como capa RAW de un Data Lake, rol IAM acotado y backend remoto con state locking. Tres ambientes (`dev`, `staging`, `prod`) sobre módulos compartidos. |
 | [`entrega_2/`](entrega_2/) | ✅ Completa | Diseño del backend remoto y la gobernanza del estado: arquitectura multi-cuenta con S3 como state remoto, DynamoDB como capa de locking, cifrado con KMS y versionado. Incluye diagramas y la justificación de por qué reduce el riesgo de corrupción frente a un estado local. |
+| [`entrega_3/`](entrega_3/) | ✅ Completa | Módulo reutilizable que crea un bucket S3 por entorno con `for_each` sobre un mapa de objetos, versionado condicional y ARNs expuestos como mapa para permitir la composición con otros módulos. |
 
 ---
 
@@ -19,10 +20,13 @@ que te interese:
   de diseño y pasos de despliegue de la infraestructura base.
 - **[entrega_2/README.md](entrega_2/README.md)** — diagramas del backend remoto, flujo de
   locking y justificación de la estrategia de aislamiento entre entornos.
+- **[entrega_3/README.md](entrega_3/README.md)** — módulo con `for_each`, versionado
+  condicional y outputs pensados para la composición entre módulos.
 
-Las dos entregas hablan del mismo problema desde ángulos distintos: la primera **construye**
-la infraestructura con Terraform; la segunda diseña cómo **proteger el estado** que esa
-infraestructura genera cuando trabaja un equipo entero sobre él.
+Las tres entregas recorren el mismo problema desde ángulos distintos: la primera
+**construye** la infraestructura, la segunda diseña cómo **proteger el estado** que esa
+infraestructura genera, y la tercera trabaja la **reutilización** del código para que un
+mismo módulo sirva a varios entornos sin duplicarse.
 
 ## Convenciones comunes
 
